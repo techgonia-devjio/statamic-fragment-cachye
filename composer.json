@@ -1,0 +1,39 @@
+{
+    "name": "kreatif/statamic-fragment-cache",
+    "autoload": {
+        "psr-4": {
+            "Kreatif\\StatamicFragmentCache\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Kreatif\\StatamicFragmentCache\\Tests\\": "tests/"
+        }
+    },
+    "require": {
+        "php": "^8.2",
+        "statamic/cms": "^5.0",
+        "illuminate/support": "^10.0 || ^11.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^9.0"
+    },
+    "config": {
+        "allow-plugins": {
+            "pixelfear/composer-dist-plugin": true
+        }
+    },
+    "extra": {
+        "statamic": {
+            "name": "Statamic Fragment Cache",
+            "description": "Statamic Fragment Cache addon"
+        },
+        "laravel": {
+            "providers": [
+                "Kreatif\\StatamicFragmentCache\\ServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
