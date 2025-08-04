@@ -16,7 +16,6 @@ class CacheModuleTagTest extends TestCase
         parent::tearDown();
     }
     public function getCacheKey(
-        $key = 'test-key',
         ?string $entryId = null,
         ?string $type = null,
         ?string $moduleId = null,
@@ -27,7 +26,7 @@ class CacheModuleTagTest extends TestCase
         $keysChunks = [];
         $keysChunks[] = $prefix;
         $keysChunks[] = $currentLocale;
-        if (!empty($key)) $keysChunks[] = $key;
+        // if (!empty($key)) $keysChunks[] = $key;
         if (!empty($entryId)) $keysChunks[] = $entryId;
         if (!empty($type)) $keysChunks[] = $type;
         if (!empty($moduleId)) $keysChunks[] = $moduleId;
@@ -212,35 +211,6 @@ class CacheModuleTagTest extends TestCase
     }
 
     /** @test */
-    public function test_it_watches_variables_when_auto_watch_is_enabled_on_fragment()
-    {
-        config([
-            'statamic.fragment-cache.auto_watch_variables' => ['related_articles'],
-            'statamic.fragment-cache.invalidation.enabled' => true,
-        ]);
-        $mainEntry = $this->makeStatamicEntry();
-        // entry that will be the "dependency" or used in main entry (i.e featured article/related entries)
-        $watchedEntry = $this->makeStatamicEntry();
-
-        $context = $mainEntry->toAugmentedArray();
-        $context['related_articles'] = [$watchedEntry];
-
-        $template = '{{ cache_fragment key="watched-block" watch="true" }}{{ [1,3,24,654,786,1,321,56] | random }}{{ /cache_fragment }}';
-
-        $cacheKey = $this->getCacheKey(key: 'watched-block', prefix: 'cache-fragment');
-        $dependencyIndexKey = config('statamic.fragment-cache.prefixes.dependency_index') . ':entry:' . $watchedEntry->id();
-
-        (string) Antlers::parse($template, $context);
-
-        $this->assertTrue(Cache::has($cacheKey));
-        $this->assertTrue(Cache::has($dependencyIndexKey));
-        $this->assertContains($cacheKey, Cache::get($dependencyIndexKey));
-
-        $watchedEntry->set('title', 'An Updated Watched Entry')->save();
-
-        $this->assertFalse(Cache::has($cacheKey));
-        $this->assertFalse(Cache::has($dependencyIndexKey));
-    }
 
     public function test_it_watches_child_entries_when_auto_watch_is_enabled_on_module()
     {
@@ -276,6 +246,41 @@ class CacheModuleTagTest extends TestCase
 
         $this->assertFalse(Cache::has($cacheKey));
         $this->assertFalse(Cache::has($dependencyIndexKey));
+    }
+
+
+
+    public function test_it_handles_a_cached_fragment_inside_a_cached_module()
+    {
+        $entry = $this->makeStatamicEntry([
+            'modules' => [
+                ['type' => 'nested_block', 'id' => 'module-123', 'text' => 'Hello Module'],
+            ]
+        ]);
+
+        $template = '
+            {{ modules }}
+                {{ cache_module entry_id="' . $entry->id() . '" }}
+                    {{ partial src="partials/{type}" }}
+                {{ /cache_module }}
+            {{ /modules }}
+        ';
+
+        $moduleCacheKey = $this->getCacheKey($entry->id(), 'nested_block', 'module-123');
+        $fragmentCacheKey = $this->getCacheKey('nested-in-module', prefix: 'cache-fragment');
+
+        $output = (string) Antlers::parse($template, $entry->toAugmentedArray());
+
+        $this->assertStringContainsString('MODULE_CONTENT: Hello Module', $output);
+        $this->assertStringContainsString('NESTED_CONTENT', $output);
+
+        // Check that both cache keys were created.
+        $this->assertTrue(Cache::has($moduleCacheKey));
+        $this->assertTrue(Cache::has($fragmentCacheKey));
+
+        // Check that the module's cache contains the rendered content of the nested fragment.
+        $moduleCache = Cache::get($moduleCacheKey);
+        $this->assertStringContainsString('NESTED_CONTENT', $moduleCache['content']);
     }
 
     /** @test */

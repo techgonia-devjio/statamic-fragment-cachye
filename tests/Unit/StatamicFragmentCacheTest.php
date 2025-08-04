@@ -85,6 +85,7 @@ class StatamicFragmentCacheTest extends TestCase
             public function setContext($context) { $this->context = collect($context); return $this; }
             public function setParams($params) { $this->params = collect($params); return $this; }
             public function callGetCacheDuration() { return $this->getCacheDuration(); }
+            protected function getLivePreviewKeySuffix(): ?string { return ''; }
         };
 
         config(['statamic.fragment-cache.default_duration' => null]);

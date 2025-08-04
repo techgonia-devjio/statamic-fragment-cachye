@@ -14,10 +14,10 @@ use Statamic\Tags\Tags;
  * Abstract base class for creating smart, dependency-aware cache tags.
  * Provides core logic for caching, dependency tracking, and "donut hole" caching.
  *
- * @param string  key         A unique identifier for the cache entry. Required for `cache_fragment`.
- * @param string  entry_id    The ID of the parent entry. Automatically inferred in `cache_module`.
+ * @param string      key         A unique identifier for the cache entry. Required for `cache_fragment`.
+ * @param string      entry_id    The ID of the parent entry. Automatically inferred in `cache_module`.
  * @param string|bool watch Dependencies to watch. `true` enables auto-watching. A `|` separated string of entry IDs for manual watching.
- * @param string  for A human-readable cache duration (e.g., "1 day", "2 hours"). Overrides the default.
+ * @param string      for A human-readable cache duration (e.g., "1 day", "2 hours"). Overrides the default.
  */
 abstract class BaseCacheTag extends Tags
 {
@@ -27,64 +27,85 @@ abstract class BaseCacheTag extends Tags
 
     abstract public function getCacheKeyPrefix(): string;
 
+    abstract protected function getLivePreviewKeySuffix(): ?string;
+
     public function index()
     {
         if (!StatamicFragmentCache::isEnabled()) {
             return (string) Antlers::parse($this->content, $this->context->all());
         }
 
-        $startTime = microtime(true);
         $cacheKey = $this->buildCacheKey();
-
         if (!$cacheKey) {
             return $this->handleMissingKey();
         }
 
-        $cachedPayload = Cache::remember($cacheKey, $this->getCacheDuration(), function () use ($cacheKey) {
-            $generationStartTime = microtime(true);
-            StatamicFragmentCache::logger()->info("Cache MISS for key: {$cacheKey}. Generating fresh content.");
+        $startTime = microtime(true);
 
-            $cachingData = $this->replaceIgnoreCacheBlocks();
-            $contentWithPlaceholders = $cachingData['content'];
-            $ignoreCachePlaceholders = $cachingData['placeholders'];
-            $parsedContentWithPlaceholders = (string) Antlers::parse($contentWithPlaceholders, $this->context->all());
-
-            if (!$this->isLivePreview()) {
-                $this->storeDependencies($cacheKey);
-            }
-
-            $duration = $this->getDurationForCompute($generationStartTime);
-            StatamicFragmentCache::logger()->debug("Cache CREATED for key: {$cacheKey}. Generation time: {$duration}");
-            return [
-                'content' => $parsedContentWithPlaceholders,
-                'placeholders' => $ignoreCachePlaceholders,
-            ];
-        });
-        $content = $cachedPayload['content'];
-        $placeholders = $cachedPayload['placeholders'];
-        if (!empty($placeholders)) {
-            foreach ($placeholders as $placeholder => $originalContent) {
-                $freshContent = (string) Antlers::parse($originalContent, $this->context->all());
-                $content = str_replace($placeholder, $freshContent, $content);
-            }
+        // Check the cache first.
+        if ($cachedPayload = Cache::get($cacheKey)) {
+            StatamicFragmentCache::logger()->debug("Cache HIT for key: {$cacheKey}");
+            $content = $this->renderFromPayload($cachedPayload);
+        } else {
+            // If not found, generate, cache, and then render.
+            $cachedPayload = $this->generateCachePayload($cacheKey);
+            Cache::put($cacheKey, $cachedPayload, $this->getCacheDuration());
+            $content = $this->renderFromPayload($cachedPayload);
         }
+
         StatamicFragmentCache::logger()->debug("Total execution time for key {$cacheKey}: " . $this->getDurationForCompute($startTime));
         return $content;
     }
 
-    protected function replaceIgnoreCacheBlocks(): array
+    /**
+     * Generates the data to be cached.
+     */
+    protected function generateCachePayload(string $cacheKey): array
     {
+        $generationStartTime = microtime(true);
+        StatamicFragmentCache::logger()->info("Cache MISS for key: {$cacheKey}. Generating fresh content.");
+
         $placeholders = [];
         $pattern = "/{{ *ignore_cache *}}(.*?){{ *\/ignore_cache *}}/si";
         $contentWithPlaceholders = preg_replace_callback($pattern, function ($matches) use (&$placeholders) {
             $placeholder = '<!--IGNORE_CACHE_PLACEHOLDER_'.Str::uuid().'-->';
-            $placeholders[$placeholder] = $matches[1]; // Store the raw inner content
+            $placeholders[$placeholder] = $matches[1];
             return $placeholder;
         }, $this->content);
+
+        $parsedContent = (string) Antlers::parse($contentWithPlaceholders, $this->context->all());
+
+        if (!$this->isLivePreview()) {
+            $this->storeDependencies($cacheKey);
+        }
+
+        $duration = $this->getDurationForCompute($generationStartTime);
+        StatamicFragmentCache::logger()->debug("Cache CREATED for key: {$cacheKey}. Generation time: {$duration}");
+
         return [
+            'content' => $parsedContent,
             'placeholders' => $placeholders,
-            'content' => $contentWithPlaceholders
         ];
+    }
+
+    /**
+     * Renders the final HTML from a cache payload.
+     */
+    protected function renderFromPayload(array $payload): string
+    {
+        $content = $payload['content'];
+        $placeholders = $payload['placeholders'];
+
+        if (empty($placeholders)) {
+            return $content;
+        }
+
+        foreach ($placeholders as $placeholder => $originalContent) {
+            $freshContent = (string) Antlers::parse($originalContent, $this->context->all());
+            $content = str_replace($placeholder, $freshContent, $content);
+        }
+
+        return $content;
     }
 
     protected function storeDependencies(string $cacheKey): void
@@ -92,8 +113,6 @@ abstract class BaseCacheTag extends Tags
         $dependencyTags = $this->buildWatchTagsList();
         if (empty($dependencyTags)) return;
 
-        // Store the reverse look-up (cleaning strategy)
-        // e.g., 'deps-for:cache-key-123' => ['entry:abc', 'entry:xyz']
         $reverseIndexKey = StatamicFragmentCache::getPrefix('dependency_index') . ':keys:' . $cacheKey;
         Cache::forever($reverseIndexKey, $dependencyTags);
 
@@ -121,26 +140,13 @@ abstract class BaseCacheTag extends Tags
 
         $currentLocale = Site::current()->handle();
         $prefix = $this->getCacheKeyPrefix();
-        $fullKey = "{$prefix}:{$currentLocale}:" . $baseKey . ($queryParams ? '?' . $queryParams : '');
-        return $fullKey;
-    }
 
-    protected function getLivePreviewKeySuffix(): string
-    {
-        $blockName = StatamicFragmentCache::getPageBuilderBlockName();
-        // Trying to avoid the use of $this->context->all() because it falls in recursion or shows white page
-        $moduleData = $this->context->get($blockName)?->value() ?? [];
-        // TODO: remove this module data, use something else maybe just entry id or...
-        $moduleData['title'] = $this->context->get('title')?->value() ?? null;
-        $moduleData['subtitle'] = $this->context->get('subtitle')?->value() ?? null;
-        ksort($moduleData);
-        $livePreviewHash = 'live-preview:'.md5(json_encode($moduleData));
-        return $livePreviewHash;
+        $full = "{$prefix}:{$currentLocale}:" . $baseKey . ($queryParams ? '?' . $queryParams : '');
+        return $full;
     }
 
     protected function buildWatchTagsList(): array
     {
-        // TODO: in future, improve also for the globals
         $tags = [];
         $watchParam = $this->params->get('watch');
         if ($watchParam === true) {
@@ -148,7 +154,6 @@ abstract class BaseCacheTag extends Tags
             foreach ($watchVariables as $var) {
                 if ($this->context->has($var)) {
                     $entries = $this->context->get($var);
-                    // TODO: in future, improve this... $entries can be entries or also a field value..
                     if ($entries && is_iterable($entries)) {
                         foreach ($entries as $entry) {
                             if (isset($entry['id'])) {

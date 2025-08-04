@@ -5,3 +5,5 @@ composer.lock
 tests/__fixtures__
 .env
 .idea/
+logs/
+supervisord.pid

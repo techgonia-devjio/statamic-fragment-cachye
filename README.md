@@ -164,5 +164,9 @@ The addon's settings can be configured by publishing the config file to config/s
 
 The following enhancements are planned for future releases of the package:
 - **Surgical Flushing**: Implement logic to invalidate only the specific modules that have actually changed within an entry, rather than all modules on that entry, for improved performance on content-heavy pages. 
-- **Cache Warming Command**: Introduce an Artisan command (php please fragment-cache:warm) to proactively generate the cache for all site pages.(Brutal way: create thread pool and call all sitemap urls)
+- **Cache Warming Command**: Introduce an Artisan command (php please fragment-cache:warm) to proactively generate the cache for all site pages.("Brutal" way: create thread pool and call all sitemap urls)
 - **Broader Invalidation**: Add event listeners for TermSaved, GlobalSetSaved, and other data types to provide more comprehensive cache invalidation.
+- **Dashboard Widget**: Develop a Statamic control panel widget to display cache statistics, such as hit/miss ratios and cache sizes, single entry cache size, deletable, and more.
+- **Database Support**: Currently, only file-based caching is supported. Need to test and implement database caching for larger sites with high traffic.
+- **invalidate cache**
+- 

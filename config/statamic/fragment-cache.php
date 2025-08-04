@@ -25,6 +25,7 @@ return [
         'fragment'  => 'cache-fragment',
         'module'    => 'cache-module',
         'dependency_index' => 'dep-index',
+        'master_key_index' => 'master-index', // For CP Management
     ],
 
     /*
@@ -51,6 +52,7 @@ return [
     */
     'auto_watch_variables' => [
         'children',
+        'cacheId',
         // 'related_entries',
         // 'featured_article',
     ],
@@ -100,6 +102,13 @@ return [
     |
     */
     "live_preview" => [
+        'cache' => [
+            'enabled' => true, // A master switch for all live preview caching
+            'tags' => [
+                'cache_fragment' => true,
+                'cache_module'   => true,
+            ],
+        ],
         // Detect whether the page is rendering in live preview
         // there are options which works and don't works.
         // Online suggests to use header to detect live preview but that doesn't work
