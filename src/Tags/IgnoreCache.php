@@ -1,6 +1,6 @@
 <?php
 
-namespace Kreatif\StatamicFragmentCache\Tags;
+namespace Devjio\StatamicFragmentCache\Tags;
 use Statamic\Tags\Tags;
 
 class IgnoreCache extends Tags

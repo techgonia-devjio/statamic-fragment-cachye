@@ -1,12 +1,12 @@
 <?php
 
-namespace Kreatif\StatamicFragmentCache\Tests;
+namespace Devjio\StatamicFragmentCache\Tests;
 
 use Illuminate\Config\Repository;
-use Kreatif\StatamicFragmentCache\ServiceProvider;
+use Devjio\StatamicFragmentCache\ServiceProvider;
 use Statamic\Testing\AddonTestCase;
 use Statamic\Testing\Concerns\PreventsSavingStacheItemsToDisk;
-use Kreatif\StatamicFragmentCache\Tests\Traits\CreatesEntries;
+use Devjio\StatamicFragmentCache\Tests\Traits\CreatesEntries;
 
 
 abstract class TestCase extends AddonTestCase

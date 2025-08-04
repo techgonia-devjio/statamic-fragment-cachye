@@ -1,6 +1,6 @@
 <?php
 
-namespace Kreatif\StatamicFragmentCache\Support;
+namespace Devjio\StatamicFragmentCache\Support;
 
 use Illuminate\Log\Logger;
 use Illuminate\Support\Facades\Log;
@@ -13,7 +13,7 @@ class StatamicFragmentCacheLogger
 
     public function isEnabled(): bool
     {
-        return \Kreatif\StatamicFragmentCache\Facades\StatamicFragmentCache::logEnabled();
+        return \Devjio\StatamicFragmentCache\Facades\StatamicFragmentCache::logEnabled();
     }
 
     protected function getLogLevel(): string {

@@ -1,11 +1,11 @@
 <?php
 
-namespace Kreatif\StatamicFragmentCache\Tests\Unit;
+namespace Devjio\StatamicFragmentCache\Tests\Unit;
 
 use Carbon\CarbonInterval;
 use Illuminate\Support\Facades\Log;
-use Kreatif\StatamicFragmentCache\Facades\StatamicFragmentCache;
-use Kreatif\StatamicFragmentCache\Tests\TestCase;
+use Devjio\StatamicFragmentCache\Facades\StatamicFragmentCache;
+use Devjio\StatamicFragmentCache\Tests\TestCase;
 use Mockery;
 
 class StatamicFragmentCacheTest extends TestCase
@@ -78,7 +78,7 @@ class StatamicFragmentCacheTest extends TestCase
     public function test_get_cache_duration_in_base_cache_tag()
     {
         // Mock a BaseCacheTag instance for testing the protected getCacheDuration method
-        $tag = new class extends \Kreatif\StatamicFragmentCache\Tags\BaseCacheTag {
+        $tag = new class extends \Devjio\StatamicFragmentCache\Tags\BaseCacheTag {
             protected static $handle = 'test_tag';
             protected function buildBaseCacheKey(): ?string { return 'test'; }
             public function getCacheKeyPrefix(): string { return 'test'; }

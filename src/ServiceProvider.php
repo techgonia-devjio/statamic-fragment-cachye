@@ -1,14 +1,14 @@
 <?php
 
-namespace Kreatif\StatamicFragmentCache;
+namespace Devjio\StatamicFragmentCache;
 
 
-use Kreatif\StatamicFragmentCache\Listeners\FlushEntryCache;
-use Kreatif\StatamicFragmentCache\Support\StatamicFragmentCache;
-use Kreatif\StatamicFragmentCache\Support\StatamicFragmentCacheLogger;
-use Kreatif\StatamicFragmentCache\Tags\CacheFragment;
-use Kreatif\StatamicFragmentCache\Tags\CacheModule;
-use Kreatif\StatamicFragmentCache\Tags\IgnoreCache;
+use Devjio\StatamicFragmentCache\Listeners\FlushEntryCache;
+use Devjio\StatamicFragmentCache\Support\StatamicFragmentCache;
+use Devjio\StatamicFragmentCache\Support\StatamicFragmentCacheLogger;
+use Devjio\StatamicFragmentCache\Tags\CacheFragment;
+use Devjio\StatamicFragmentCache\Tags\CacheModule;
+use Devjio\StatamicFragmentCache\Tags\IgnoreCache;
 use Statamic\Events\EntrySaved;
 use Statamic\Providers\AddonServiceProvider;
 

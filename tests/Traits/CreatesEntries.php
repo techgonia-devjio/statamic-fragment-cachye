@@ -1,6 +1,6 @@
 <?php
 
-namespace Kreatif\StatamicFragmentCache\Tests\Traits;
+namespace Devjio\StatamicFragmentCache\Tests\Traits;
 
 use Illuminate\Support\Str;
 use Statamic\Entries\Entry;

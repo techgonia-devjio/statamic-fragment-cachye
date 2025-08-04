@@ -1,9 +1,9 @@
 <?php
 
-namespace Kreatif\StatamicFragmentCache\Listeners;
+namespace Devjio\StatamicFragmentCache\Listeners;
 
 use Illuminate\Support\Facades\Cache;
-use Kreatif\StatamicFragmentCache\Facades\StatamicFragmentCache;
+use Devjio\StatamicFragmentCache\Facades\StatamicFragmentCache;
 use Statamic\Events\EntrySaved;
 use Statamic\StaticCaching\Cacher;
 

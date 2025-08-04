@@ -1,9 +1,9 @@
 <?php
 
-namespace Kreatif\StatamicFragmentCache\Tests\Feature;
+namespace Devjio\StatamicFragmentCache\Tests\Feature;
 
 use Illuminate\Support\Facades\Cache;
-use Kreatif\StatamicFragmentCache\Tests\TestCase;
+use Devjio\StatamicFragmentCache\Tests\TestCase;
 use Statamic\Facades\Antlers;
 use Statamic\Facades\Site;
 

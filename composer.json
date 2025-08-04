@@ -1,13 +1,13 @@
 {
-    "name": "kreatif/statamic-fragment-cache",
+    "name": "devjio/statamic-fragment-cache",
     "autoload": {
         "psr-4": {
-            "Kreatif\\StatamicFragmentCache\\": "src"
+            "Devjio\\StatamicFragmentCache\\": "src"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Kreatif\\StatamicFragmentCache\\Tests\\": "tests/"
+            "Devjio\\StatamicFragmentCache\\Tests\\": "tests/"
         }
     },
     "require": {
@@ -30,7 +30,7 @@
         },
         "laravel": {
             "providers": [
-                "Kreatif\\StatamicFragmentCache\\ServiceProvider"
+                "Devjio\\StatamicFragmentCache\\ServiceProvider"
             ]
         }
     },

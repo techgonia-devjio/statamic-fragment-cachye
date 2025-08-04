@@ -17,12 +17,12 @@ Consequently, when a source entry is modified, the addon can target and invalida
 You can install this addon via Composer:
 
 ``` bash
-composer require kreatif/statamic-fragment-cache
+composer require Devjio/statamic-fragment-cache
 ```
 
 #### as addon directory
 
-Place the addon directory into addons/kreatif/statamic-fragment-cache.
+Place the addon directory into addons/devjio/statamic-fragment-cache.
 
 Add the addon as a "path" repository to your project's composer.json file:
 ```json
@@ -31,17 +31,17 @@ Add the addon as a "path" repository to your project's composer.json file:
   "repositories": [
     {
         "type": "path",
-        "url": "addons/kreatif/statamic-fragment-cache"
+        "url": "addons/devjio/statamic-fragment-cache"
     }
   ],
   "require": {
      ....,
-    "kreatif/statamic-fragment-cache": "@dev"
+    "devjio/statamic-fragment-cache": "@dev"
   }
 
 ```
 
-Execute `composer require kreatif/statamic-fragment-cache` in your terminal.
+Execute `composer require devjio/statamic-fragment-cache` in your terminal.
 
 #### as git submodule
  TODO: ....

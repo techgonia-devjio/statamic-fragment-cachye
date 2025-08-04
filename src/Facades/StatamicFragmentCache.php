@@ -1,9 +1,9 @@
 <?php
 
-namespace Kreatif\StatamicFragmentCache\Facades;
+namespace Devjio\StatamicFragmentCache\Facades;
 
 use Illuminate\Support\Facades\Facade;
-use Kreatif\StatamicFragmentCache\Support\StatamicFragmentCacheLogger;
+use Devjio\StatamicFragmentCache\Support\StatamicFragmentCacheLogger;
 
 
 /**
@@ -17,12 +17,12 @@ use Kreatif\StatamicFragmentCache\Support\StatamicFragmentCacheLogger;
  * @method static StatamicFragmentCacheLogger logger()
  *
  *
- * @see \Kreatif\StatamicFragmentCache\Support\StatamicFragmentCache
+ * @see \Devjio\StatamicFragmentCache\Support\StatamicFragmentCache
  */
 class StatamicFragmentCache extends Facade
 {
     protected static function getFacadeAccessor()
     {
-        return \Kreatif\StatamicFragmentCache\Support\StatamicFragmentCache::class;
+        return \Devjio\StatamicFragmentCache\Support\StatamicFragmentCache::class;
     }
 }

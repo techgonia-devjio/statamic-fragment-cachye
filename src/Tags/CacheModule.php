@@ -1,8 +1,8 @@
 <?php
 
-namespace Kreatif\StatamicFragmentCache\Tags;
+namespace Devjio\StatamicFragmentCache\Tags;
 
-use Kreatif\StatamicFragmentCache\Facades\StatamicFragmentCache;
+use Devjio\StatamicFragmentCache\Facades\StatamicFragmentCache;
 
 class CacheModule extends BaseCacheTag
 {

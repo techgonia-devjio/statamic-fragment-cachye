@@ -1,6 +1,6 @@
 <?php
 
-namespace Kreatif\StatamicFragmentCache\Support;
+namespace Devjio\StatamicFragmentCache\Support;
 
 class StatamicFragmentCache
 {
@@ -11,7 +11,7 @@ class StatamicFragmentCache
 
     public function getPrefix(string $type): string
     {
-        return config("statamic.fragment-cache.prefixes.{$type}", "kreatif-cache-{$type}");
+        return config("statamic.fragment-cache.prefixes.{$type}", "Devjio-cache-{$type}");
     }
 
     public function getLivePreviewDetectionMethod(): string

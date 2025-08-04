@@ -1,10 +1,10 @@
 <?php
 
-namespace Kreatif\StatamicFragmentCache\Tags;
+namespace Devjio\StatamicFragmentCache\Tags;
 
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
-use Kreatif\StatamicFragmentCache\Facades\StatamicFragmentCache;
+use Devjio\StatamicFragmentCache\Facades\StatamicFragmentCache;
 use Statamic\Facades\Antlers;
 use Statamic\Facades\Site;
 use Statamic\Tags\Tags;
