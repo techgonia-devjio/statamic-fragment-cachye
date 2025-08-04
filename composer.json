@@ -1,5 +1,15 @@
 {
     "name": "devjio/statamic-fragment-cache",
+    "description": "Statamic Fragment Cache addon",
+    "type": "statamic-addon",
+    "license": "MIT",
+    "keywords": [
+        "statamic",
+        "addon",
+        "fragment-cache",
+        "cache"
+    ],
+    "version": "0.0.1-dev",
     "autoload": {
         "psr-4": {
             "Devjio\\StatamicFragmentCache\\": "src"
