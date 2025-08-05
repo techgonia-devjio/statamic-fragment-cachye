@@ -151,20 +151,16 @@ class IgnoreCacheTagTest extends TestCase
         $this->assertTrue(Cache::has($this->getCacheKey('inner')));
     }
 
-    public function test_ignore_cache_is_case_insensitive()
+    public function test_ignore_cache_is_not_case_insensitive()
     {
-        $template = '
-            {{ cache_fragment key="case-insensitive-test" }}
-                CACHED-{{ IGNORE_CACHE }}{{ dynamic_value }}{{ /IGNORE_CACHE }}-CACHED
-            {{ /cache_fragment }}
-        ';
+        $template = '{{ cache_fragment key="case-insensitive-test" }}CACHED-{{ IGNORE_CACHE }}{{ dynamic_value }}{{ /IGNORE_CACHE }}-CACHED{{ /cache_fragment }}';
 
         $output1 = (string) Antlers::parse($template, ['dynamic_value' => 'A']);
         $output2 = (string) Antlers::parse($template, ['dynamic_value' => 'B']);
 
-        $this->assertNotEquals($output1, $output2);
-        $this->assertEquals('CACHED-A-CACHED', trim($output1));
-        $this->assertEquals('CACHED-B-CACHED', trim($output2));
+        $this->assertEquals($output1, $output2);
+        $this->assertEquals('CACHED--CACHED', trim($output1));
+        $this->assertEquals('CACHED--CACHED', trim($output2));
     }
 
     /** @test */

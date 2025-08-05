@@ -19,8 +19,8 @@ class CacheModule extends BaseCacheTag
     {
         $type = $this->context->get('type') ?? $this->context->get('handle');
         $moduleId = $this->context->get('id');
-        $parentEntryId = $this->params->get('entry_id');
-        if (!$type || !$moduleId || !$parentEntryId) {
+        $parentEntryId = $this->params->get('entry_id') ?? $this->context->get('entry_id');
+        if (empty($type) && empty($moduleId) && empty($parentEntryId)) {
             return null; // A module must have these to be cached
         }
         return "{$parentEntryId}:{$type}:{$moduleId}";
@@ -39,8 +39,26 @@ class CacheModule extends BaseCacheTag
         // Trying to avoid the use of $this->context->all() because it falls in recursion or shows white page
         $moduleData = $this->context->get($blockName)?->value() ?? [];
         // TODO: remove this module data, use something else maybe just entry id or...
-        $moduleData['title'] = $this->context->get('title')?->value() ?? null;
-        $moduleData['subtitle'] = $this->context->get('subtitle')?->value() ?? null;
+        $title = $this->context->get('title');
+        if ($title) {
+            if (is_string($title)) {
+                $moduleData['title'] = $title;
+            } elseif ($title instanceof \Statamic\Fields\Value) {
+                $moduleData['title'] = $title->value();
+            } else {
+                $moduleData['title'] = null;
+            }
+        }
+        $subtitle = $this->context->get('subtitle');
+        if ($subtitle) {
+            if (is_string($subtitle)) {
+                $moduleData['subtitle'] = $subtitle;
+            } elseif ($title instanceof \Statamic\Fields\Value) {
+                $moduleData['subtitle'] = $subtitle->value();
+            } else {
+                $moduleData['subtitle'] = null;
+            }
+        }
         ksort($moduleData);
         return ':live-preview:'.md5(json_encode($moduleData));
     }

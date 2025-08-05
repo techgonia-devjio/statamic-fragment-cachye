@@ -2,6 +2,7 @@
 
 namespace Devjio\StatamicFragmentCache\Tags;
 
+use Devjio\StatamicFragmentCache\Support\CacheStack;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Devjio\StatamicFragmentCache\Facades\StatamicFragmentCache;
@@ -22,12 +23,18 @@ use Statamic\Tags\Tags;
 abstract class BaseCacheTag extends Tags
 {
 
+    protected $ignoreCachePlaceholders = [];
 
     abstract protected function buildBaseCacheKey(): ?string;
 
     abstract public function getCacheKeyPrefix(): string;
 
     abstract protected function getLivePreviewKeySuffix(): ?string;
+
+    public function addIgnoredBlock(string $placeholder, string $content): void
+    {
+        $this->ignoreCachePlaceholders[$placeholder] = $content;
+    }
 
     public function index()
     {
@@ -40,8 +47,34 @@ abstract class BaseCacheTag extends Tags
             return $this->handleMissingKey();
         }
 
+        CacheStack::push($this);
         $startTime = microtime(true);
 
+        try {
+            $cachedPayload = Cache::remember($cacheKey, $this->getCacheDuration(), function () use ($cacheKey) {
+                // The `generateCachePayload` method will now be much simpler.
+                return $this->generateCachePayload($cacheKey);
+            });
+        } finally {
+            // Always ensure we pop the tag off the stack when we're done.
+            CacheStack::pop();
+        }
+
+        if ($parent = CacheStack::peek()) {
+            // If we are nested, pass our placeholders up to the parent.
+            foreach ($cachedPayload['placeholders'] as $placeholder => $content) {
+                $parent->addIgnoredBlock($placeholder, $content);
+            }
+            // And return our content with the placeholders still inside.
+            StatamicFragmentCache::logger()->debug("Total execution time for key {$cacheKey}: " . $this->getDurationForCompute($startTime));
+            return $cachedPayload['content'];
+        }
+        $content = $this->renderFromPayload($cachedPayload);
+        StatamicFragmentCache::logger()->debug("Total execution time for key {$cacheKey}: " . $this->getDurationForCompute($startTime));
+
+        return $content;
+
+        /*
         // Check the cache first.
         if ($cachedPayload = Cache::get($cacheKey)) {
             StatamicFragmentCache::logger()->debug("Cache HIT for key: {$cacheKey}");
@@ -54,13 +87,49 @@ abstract class BaseCacheTag extends Tags
         }
 
         StatamicFragmentCache::logger()->debug("Total execution time for key {$cacheKey}: " . $this->getDurationForCompute($startTime));
+        return $content;*/
+    }
+
+    protected function generateCachePayload(string $cacheKey): array
+    {
+        StatamicFragmentCache::logger()->info("Cache MISS for key: {$cacheKey}. Generating fresh content.");
+
+        // The Antlers::parse call is now the key. As it parses, any `ignore_cache`
+        // tags will execute their logic and call `addIgnoredBlock` on this instance,
+        // populating the `$this->ignoreCachePlaceholders` array automatically.
+        $parsedContent = (string) Antlers::parse($this->content, $this->context->all());
+        if (!$this->isLivePreview()) {
+            $this->storeDependencies($cacheKey);
+            $this->addToMasterKeyIndex($cacheKey);
+        }
+
+        return [
+            'content' => $parsedContent,
+            'placeholders' => $this->ignoreCachePlaceholders,
+        ];
+    }
+
+    protected function renderFromPayload(array $payload): string
+    {
+        $content = $payload['content'];
+        $placeholders = $payload['placeholders'];
+
+        if (empty($placeholders)) {
+            return $content;
+        }
+
+        foreach ($placeholders as $placeholder => $originalContent) {
+            $freshContent = (string) Antlers::parse($originalContent, $this->context->all());
+            $content = str_replace($placeholder, $freshContent, $content);
+        }
+
         return $content;
     }
 
     /**
      * Generates the data to be cached.
      */
-    protected function generateCachePayload(string $cacheKey): array
+    protected function generateCachePayload_legacy(string $cacheKey): array
     {
         $generationStartTime = microtime(true);
         StatamicFragmentCache::logger()->info("Cache MISS for key: {$cacheKey}. Generating fresh content.");
@@ -91,7 +160,7 @@ abstract class BaseCacheTag extends Tags
     /**
      * Renders the final HTML from a cache payload.
      */
-    protected function renderFromPayload(array $payload): string
+    protected function renderFromPayload_legacy(array $payload): string
     {
         $content = $payload['content'];
         $placeholders = $payload['placeholders'];
@@ -106,6 +175,13 @@ abstract class BaseCacheTag extends Tags
         }
 
         return $content;
+    }
+
+    public function addToMasterKeyIndex(string $cacheKey): void
+    {
+        // Should store the values in json format or is there a better way?
+        // because saving files in json, could do a lot of I/O operations.
+
     }
 
     protected function storeDependencies(string $cacheKey): void
@@ -181,7 +257,7 @@ abstract class BaseCacheTag extends Tags
         $detectionMethod = StatamicFragmentCache::getLivePreviewDetectionMethod();
         if ($detectionMethod === 'context') {
             $livePreviewField = $this->context->get('live_preview');
-            return $livePreviewField ? !!$livePreviewField->value() : false;
+            return $livePreviewField && (($livePreviewField == true || !!$livePreviewField->value()));
         }
         return request()->hasHeader('Statamic-Live-Preview') || request()->hasHeader('X-Statamic-Live-Preview');
     }

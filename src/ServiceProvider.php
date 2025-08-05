@@ -4,6 +4,7 @@ namespace Devjio\StatamicFragmentCache;
 
 
 use Devjio\StatamicFragmentCache\Listeners\FlushEntryCache;
+use Devjio\StatamicFragmentCache\Support\CacheStack;
 use Devjio\StatamicFragmentCache\Support\StatamicFragmentCache;
 use Devjio\StatamicFragmentCache\Support\StatamicFragmentCacheLogger;
 use Devjio\StatamicFragmentCache\Tags\CacheFragment;
@@ -34,6 +35,10 @@ class ServiceProvider extends AddonServiceProvider
 
         $this->app->singleton(StatamicFragmentCacheLogger::class, function () {
             return new StatamicFragmentCacheLogger();
+        });
+
+        $this->app->singleton(CacheStack::class, function () {
+            return new CacheStack();
         });
 
         $this->mergeConfigFrom(__DIR__.'/../config/statamic/fragment-cache.php', 'statamic.fragment-cache');
